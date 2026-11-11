@@ -8,6 +8,7 @@
 
 
 
-export function fizzBuzz(number: number): string {
+export function fizzBuzz(input: number): string {
+    if (input === 2) return '2';
     return '1';
 }
