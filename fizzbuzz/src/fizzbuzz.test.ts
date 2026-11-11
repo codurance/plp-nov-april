@@ -15,9 +15,13 @@ describe('fizzbuzz', () => {
 
   
    it('returns 1 as 1', ()=> {
-    expect(fizzBuzz(1)).toBe('1');
+      expect(fizzBuzz(1)).toBe('1');
 
-   }) 
+   });
+
+   it('returns 2 as 2', () => {
+    expect(fizzBuzz(2)).toBe('2');
+   });
 
 
 
