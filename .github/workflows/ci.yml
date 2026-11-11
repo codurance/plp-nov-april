@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  discover:
+    name: Find projects
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.find.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: List directories containing a package.json
+        id: find
+        run: |
+          projects=$(find . -mindepth 2 -maxdepth 2 -name package.json \
+            -not -path './node_modules/*' -exec dirname {} \; \
+            | sed 's|^\./||' | sort | jq -R -s -c 'split("\n")[:-1]')
+          echo "Found: $projects"
+          echo "projects=$projects" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: ${{ matrix.project }}
+    needs: discover
+    if: needs.discover.outputs.projects != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.discover.outputs.projects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
